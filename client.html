@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+
+    textarea {
+        width: 100%;
+        border: none;
+        resize: none;
+    }
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .frame {
+        width: 800px;
+        background-color: #f0f0f0;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .button-container {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+    input[type="submit"] {
+        background-color: black;
+        color: white;
+        text-transform: uppercase;
+        border-radius: 0;
+        border: none;
+        padding: 6px 14px;
+        font-weight: bold;
+        font-size: 15px;
+        font-family: "Helvetica", sans-serif;
+        float: right;
+    }
+    #comments {
+        width: 800px;
+        height: 400px;
+        overflow-y: scroll;
+        border: 1px solid lightgray;;
+        padding: 10px;
+        background-color: #ffffcc;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        margin: 0 auto;         /* horizontally center comment feed */
+    }
+    .comment {
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+        font: 15px Arial, sans-serif;
+        animation-name: fadeIn;
+        animation-duration: 1s;
+    }
+    </style>
+</head>
+
+<body>
+
+    <script>
+        // Consider whether to place scripts in head or body. Scripts that impact rendering 
+        // may be better placed at the end of the body.
+
+        function submitComment(event) {
+
+            // Get textarea text
+            event.preventDefault();
+            const commentEl = document.createElement('div');
+            commentEl.className = 'comment';
+            const text = document.getElementById('text').value;
+            commentEl.textContent = text;
+
+            // Append comment
+            document.querySelector('#comments').appendChild(commentEl);
+
+            // Clear textarea
+            document.getElementById('text').value = '';
+        }
+    </script>
+
+    <!-- Comment submission form -->
+    <form onsubmit="submitComment(event)">
+      <div class="frame">
+        <textarea id="text" name="text" rows="4"></textarea><br>
+        <div class="button-container">
+            <div>
+
+                <!-- Formatting buttons; currently non-functional -->
+                <button type="button" onclick="document.execCommand('bold',false,null)">B</button>
+                <button type="button" onclick="document.execCommand('italic',false,null)">I</button>
+            </div>
+            <input type="submit" value="Submit">
+        </div>
+      </div>
+    </form>
+
+
+    <!-- Comment section -->
+    <div id="comments"></div>
+
+    <script>
+        // Automatically display a test comment
+        const commentEl = document.createElement('div');
+        commentEl.className = 'comment';
+        commentEl.textContent = 'This is a test comment.';
+        document.querySelector('#comments').appendChild(commentEl);
+    </script>
+    
+</body>
+</html>
