@@ -21,6 +21,7 @@
     }
     .frame {
         width: 800px;
+/*        background-color: #f0f0f0;*/
         padding: 8px;
         display: flex;
         flex-direction: column;
@@ -30,6 +31,7 @@
     }
     .reply-frame {
         width: 767px;
+/*        background-color: #f0f0f0;*/
         padding: 8px;
         display: flex;
         flex-direction: column;
@@ -43,6 +45,7 @@
         width: 800px;
         height: 400px;
         overflow-y: scroll;
+/*        border: 1px solid lightgray;*/
         padding: 10px;
         background-color: #ffffcc;
         border-radius: 5px;
@@ -58,6 +61,8 @@
         animation-name: fadeIn;
         animation-duration: 1s;
         background-color: #383635;
+/*        margin-bottom: 4px;*/     /* separation between comments */
+/*        margin-left: 20px;*/      /* can be used to indent comments for replies */
     }
     .button-container {
         width: 100%;
@@ -66,6 +71,7 @@
     }
     input[type="submit"] {
         background-color: black;
+/*        background-color: transparent;*/
         color: white;
         text-transform: uppercase;
         border-radius: 0;
@@ -98,6 +104,55 @@
         // Consider whether to place scripts in head or body. Scripts that impact rendering 
         // may be better placed at the end of the body.
 
+        class comment {
+            constructor() {
+                this.selfRecd = false;
+                this.recNum = 0;
+                this.commentText = '';
+                this.username = '';
+            }
+        }
+
+        // Global vars/consts
+        let commentNumber = 0;
+        recThreshold = 1;        
+
+        function setupRecListener(comment, button) {
+            button.addEventListener('click', () => {
+
+                if (comment.getAttribute('selfRecd') == 'false') {
+
+                    comment.setAttribute('selfRecd', 'true');
+                    
+                    const num = parseInt(comment.getAttribute('recNum'));
+                    comment.setAttribute('recNum', String(num+1));
+                    button.textContent = "Rec'd" + " (" + (num+1) + ")";
+
+                    console.log('if branch:');
+                    console.log(comment.getAttribute('recNum'));
+
+                    // If recNum >= threshold, render comment green
+                    if (parseInt(comment.getAttribute('recNum')) >= recThreshold) {
+                        comment.style.backgroundColor = 'darkgreen';
+                    }
+                }
+                else {
+                    comment.setAttribute('selfRecd', 'false');
+
+                    console.log('else branch:')
+
+                    const num = parseInt(comment.getAttribute('recNum'));
+                    comment.setAttribute('recNum', String(num-1));
+                    button.textContent = "Rec" + " (" + (num-1) + ")";
+
+                    // If recNum < threshold, render comment default color
+                    if (parseInt(comment.getAttribute('recNum')) < recThreshold) {
+                        comment.style.backgroundColor = '#383635';
+                    }
+                }
+            });
+        }
+
         function setupReplyListener(button, level) {
             button.addEventListener('click', () => {
                 
@@ -105,6 +160,8 @@
                 replyDiv.setAttribute('id', 'replyFormTest');
 
                 const replyForm = createForm(level);
+                // button.appendChild(replyForm);
+                // document.querySelector('#comments').appendChild(replyForm);
 
                 document.querySelector('#comments').appendChild(replyDiv);
                 replyDiv.appendChild(replyForm);
@@ -112,111 +169,67 @@
             });
         }
 
-        function setupRecListener(button) {
-            button.addEventListener('click', () => {
-                if (!selfRecd) {
-                    selfRecd = true;
-                    recNum += 1;
-                    button.textContent = "Rec'd" + " (" + recNum + ")";
-
-                    // If recNum >= threshold, render comment green
-                    if (recNum >= recThreshold) {
-                        commentEl.style.backgroundColor = 'darkgreen';
-                    }
-                }
-                else {
-                    selfRecd = false;
-                    recNum -= 1;
-                    button.textContent = "Rec" + " (" + recNum + ")";
-
-                    // If recNum < threshold, render comment default color
-                    if (recNum < recThreshold) {
-                        commentEl.style.backgroundColor = '#383635';
-                    }
-                }
-
-            });
-        }
-
         function submitReply(event, level) {
 
-            const recThreshold = 1;
+            console.log('submitReply');
 
-            let recNum = 0;
-            let selfRecd = false;
+            // let recNum = 0;
+            // let selfRecd = 'false';     // this needs adjustment to setAttr, but use a string, not bool
 
-            const selfLevel = level + 1;
-            console.log(selfLevel);
+            // const selfLevel = level + 1;
 
-            // Create comment and get textarea text
-            event.preventDefault();
-            let commentEl = document.createElement('div');
-            commentEl.className = 'comment';
-            // const text = document.getElementById('replyFormTest').value;
-            const text = document.getElementById('replyText').value;
-            commentEl.innerHTML = text;
+            // // Create comment and get textarea text
+            // event.preventDefault();
+            // let commentEl = document.createElement('div');
+            // commentEl.className = 'comment';
+            // // const text = document.getElementById('replyFormTest').value;
+            // const text = document.getElementById('replyText').value;
 
-            // Render footer (Username + "posted on Month Day, Year at XX:XX PM")
-            const footer = document.createElement('div');
-            footer.className = 'footer';
-            footer.textContent = 'Username';
-            commentEl.appendChild(footer);
+            // // text = text.replace(/\n/g, '<br>');     // this doing anything?
+            // commentEl.innerHTML = text;
 
-            // Render comment reply button
-            const buttonReply = document.createElement("button");
-            buttonReply.className = 'button-reply';
-            buttonReply.textContent = "Reply";
-            footer.appendChild(buttonReply);
+            // // Render footer (Username + "posted on Month Day, Year at XX:XX PM")
+            // const footer = document.createElement('div');
+            // footer.className = 'footer';
+            // footer.textContent = 'Username';
+            // commentEl.appendChild(footer);
 
-            // Set reply button functionality
-            setupReplyListener(buttonReply, selfLevel);
+            // // Render comment reply button
+            // const buttonReply = document.createElement("button");
+            // buttonReply.className = 'button-reply';
+            // buttonReply.textContent = "Reply";
+            // footer.appendChild(buttonReply);
 
-            // Render comment rec button
-            const buttonRec = document.createElement("button");
-            buttonRec.className = 'button-reply';
-            buttonRec.textContent = "Rec" + " (" + recNum + ")";
-            footer.appendChild(buttonRec);
+            // // Set reply button functionality
+            // setupReplyListener(buttonReply, selfLevel);
 
-            // Set rec button functionality
-            buttonRec.addEventListener('click', () => {
-                if (!selfRecd) {
-                    selfRecd = true;
-                    recNum += 1;
-                    buttonRec.textContent = "Rec'd" + " (" + recNum + ")";
+            // // Render comment rec button
+            // const buttonRec = document.createElement("button");
+            // buttonRec.className = 'button-reply';
+            // buttonRec.textContent = "Rec" + " (" + recNum + ")";
+            // footer.appendChild(buttonRec);
 
-                    // If recNum >= threshold, render comment green
-                    if (recNum >= recThreshold) {
-                        commentEl.style.backgroundColor = 'darkgreen';
-                    }
-                }
-                else {
-                    selfRecd = false;
-                    recNum -= 1;
-                    buttonRec.textContent = "Rec" + " (" + recNum + ")";
+            // // Set rec button functionality
+            // setupRecListener(buttonRec, selfRecd, recNum);
 
-                    // If recNum < threshold, render comment default color
-                    if (recNum < recThreshold) {
-                        commentEl.style.backgroundColor = '#383635';
-                    }
-                }
 
-            });
+            // // Append comment
+            // document.querySelector('#comments').appendChild(commentEl);
 
-            // Append comment
-            document.querySelector('#comments').appendChild(commentEl);
+            // // Clear textarea
+            // // document.getElementById('replyFormTest').value = '';
 
-            // Delete reply form 
-            let f = document.querySelector('#replyFormTest');
-            f.remove();
+            // // Delete reply form 
+            // let f = document.querySelector('#replyFormTest');
+            // f.remove();
+
+            // // Increment comment number
+            // commentNumber += 1;
         }
 
         function submitComment(event) {
 
-            const recThreshold = 1;
             const level = 0;
-
-            let recNum = 0;
-            let selfRecd = false;
 
             event.preventDefault();
 
@@ -227,9 +240,10 @@
             text = text.replace(/\n/g, '<br>');
             commentEl.innerHTML = text;
 
-            commentEl.setAttribute('testAttr', 0);
-            let testV = commentEl.getAttribute('testAttr');
-            console.log(testV);
+            // let recNum = 0;
+            // let selfRecd = false;
+            commentEl.setAttribute('recNum', String(0));    // setAttr accepts string, not bool
+            commentEl.setAttribute('selfRecd', 'false');    
 
             // Render footer (Username + "posted on Month Day, Year at XX:XX PM")
             const footer = document.createElement('div');
@@ -243,52 +257,42 @@
             buttonReply.textContent = "Reply";
             footer.appendChild(buttonReply);
 
+            // Set comment ID
+            commentNumber += 1;
+            commentEl.setAttribute('commentID', commentNumber);
+            commentEl.id = String(commentNumber);
+
             // Set reply button functionality
             buttonReply.addEventListener('click', () => {
-                
+
                 let replyDiv = document.createElement('div');
-                replyDiv.setAttribute('id', 'replyFormTest');
+                replyDiv.id = 'replyFormTest';
 
-                let replyForm = createForm(level);
+                let replyForm = createForm(0);
+                // // replyForm.setAttribute('id', 'replyFormTest');
 
-                document.querySelector('#comments').appendChild(replyDiv);
-                replyDiv.appendChild(replyForm);
+                let c = document.querySelector('#comments');
 
+                if (commentEl.nextSibling) {
+                    c.insertBefore(replyForm, commentEl.nextSibling);
+                }
+                else {
+                    c.insertBefore(replyForm, document.getElementById('endDiv'));
+                }
             });
 
             // Render comment rec button
             const buttonRec = document.createElement("button");
             buttonRec.className = 'button-reply';
-            buttonRec.textContent = "Rec" + " (" + recNum + ")";
+            buttonRec.textContent = "Rec" + " (" + commentEl.getAttribute('recNum') + ")";
             footer.appendChild(buttonRec);
 
             // Set rec button functionality
-            buttonRec.addEventListener('click', () => {
-                if (!selfRecd) {
-                    selfRecd = true;
-                    recNum += 1;
-                    buttonRec.textContent = "Rec'd" + " (" + recNum + ")";
-
-                    // If recNum >= threshold, render comment green
-                    if (recNum >= recThreshold) {
-                        commentEl.style.backgroundColor = 'darkgreen';
-                    }
-                }
-                else {
-                    selfRecd = false;
-                    recNum -= 1;
-                    buttonRec.textContent = "Rec" + " (" + recNum + ")";
-
-                    // If recNum < threshold, render comment default color
-                    if (recNum < recThreshold) {
-                        commentEl.style.backgroundColor = '#383635';
-                    }
-                }
-
-            });
+            setupRecListener(commentEl, buttonRec);
 
             // Append comment
-            document.querySelector('#comments').appendChild(commentEl);
+            let c = document.querySelector('#comments');
+            c.insertBefore(commentEl, document.getElementById('endDiv'));
 
             // Clear textarea
             document.getElementById('text').value = '';
@@ -320,6 +324,7 @@
     </script>
 
     <!-- Comment submission form -->
+    <!-- spellcheck=true attribute turns on spellcheck in textarea -->
     <form onsubmit="submitComment(event)">
       <div class="frame">
         <textarea id="text" 
@@ -339,21 +344,21 @@
       </div>
     </form>
 
-
     <!-- Comment section -->
     <div id="comments"></div>
 
+    <!-- This script only for test purposes; variables/consts above aren't available here. -->
     <script>
-        // Automatically display a test comment
-        const commentEl = document.createElement('div');
-        commentEl.className = 'comment';
-        commentEl.textContent = 'This is a test comment. This is a second line of the comment.';
-        document.querySelector('#comments').appendChild(commentEl);
 
-        const footer = document.createElement('div');
-        footer.className = 'footer';
-        footer.textContent = 'Username';
-        commentEl.appendChild(footer);
+        // Very first element appended to #comments section is a div that marks the end of the comments.
+        // We can use this to call insertBefore() and insert new comments before this div, if there isn't
+        // already a comment after the one we're replying to.
+        const endDiv = document.createElement('div');
+        endDiv.id = 'endDiv';
+        document.body.appendChild(endDiv);
+        let c = document.querySelector('#comments');
+        c.appendChild(endDiv);
+
     </script>
     
 </body>
