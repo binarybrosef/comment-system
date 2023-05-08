@@ -20,12 +20,12 @@ class Comment {
         this.buttonReply = document.createElement("button");
         this.buttonReply.className = 'buttonReply';
         this.buttonReply.textContent = "Reply";
-        this.footer.appendChild(buttonReply);
+        this.footer.appendChild(this.buttonReply);
 
         // Rec button
         this.buttonRec = document.createElement("button");
         this.buttonRec.className = 'buttonReply';
-        this.footer.appendChild(buttonRec);
+        this.footer.appendChild(this.buttonRec);
     }
 
     postComment() {
