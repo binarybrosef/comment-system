@@ -21,6 +21,7 @@
     }
     .frame {
         width: 800px;
+/*        background-color: #f0f0f0;*/
         padding: 8px;
         display: flex;
         flex-direction: column;
@@ -30,6 +31,7 @@
     }
     .reply-frame {
         width: 767px;
+/*        background-color: #f0f0f0;*/
         padding: 8px;
         display: flex;
         flex-direction: column;
@@ -41,8 +43,9 @@
     }
     #comments {
         width: 800px;
-        height: 400px;
+        height: 650px;
         overflow-y: scroll;
+/*        border: 1px solid lightgray;*/
         padding: 10px;
         background-color: #ffffcc;
         border-radius: 5px;
@@ -58,6 +61,8 @@
         animation-name: fadeIn;
         animation-duration: 1s;
         background-color: #383635;
+/*        margin-bottom: 4px;*/     /* separation between comments */
+/*        margin-left: 20px;*/      /* can be used to indent comments for replies */
     }
     .button-container {
         width: 100%;
@@ -66,6 +71,7 @@
     }
     input[type="submit"] {
         background-color: black;
+/*        background-color: transparent;*/
         color: white;
         text-transform: uppercase;
         border-radius: 0;
@@ -98,144 +104,64 @@
         // Consider whether to place scripts in head or body. Scripts that impact rendering 
         // may be better placed at the end of the body.
 
-        function setupReplyListener(button, level) {
+        // Global vars/consts
+        let commentNumber = 0;
+        const recThreshold = 1;
+        const commentRecdColor = 'darkgreen';
+        const commentDefaultColor = '#383635';      
+
+        // Set rec button functionality
+        function setupRecListener(comment, button) {
             button.addEventListener('click', () => {
-                
-                let replyDiv = document.createElement('div');
-                replyDiv.setAttribute('id', 'replyFormTest');
 
-                const replyForm = createForm(level);
-
-                document.querySelector('#comments').appendChild(replyDiv);
-                replyDiv.appendChild(replyForm);
-
-            });
-        }
-
-        function setupRecListener(button) {
-            button.addEventListener('click', () => {
-                if (!selfRecd) {
-                    selfRecd = true;
-                    recNum += 1;
-                    button.textContent = "Rec'd" + " (" + recNum + ")";
+                // If user hasn't recd comment, set selfRecd=true and increment recNum
+                if (!comment.selfRecd) {
+                    comment.selfRecd = true;
+                    comment.recNum += 1;
+                    
+                    button.textContent = "Rec'd" + " (" + (comment.recNum) + ")";
 
                     // If recNum >= threshold, render comment green
-                    if (recNum >= recThreshold) {
-                        commentEl.style.backgroundColor = 'darkgreen';
+                    if (comment.recNum >= recThreshold) {
+                        comment.style.backgroundColor = commentRecdColor;
                     }
                 }
                 else {
-                    selfRecd = false;
-                    recNum -= 1;
-                    button.textContent = "Rec" + " (" + recNum + ")";
+                    comment.selfRecd = false;
+                    comment.recNum -= 1;
+                    
+                    button.textContent = "Rec'd" + " (" + (comment.recNum) + ")";
 
                     // If recNum < threshold, render comment default color
-                    if (recNum < recThreshold) {
-                        commentEl.style.backgroundColor = '#383635';
+                    if (comment.recNum < recThreshold) {
+                        comment.style.backgroundColor = commentDefaultColor;
                     }
                 }
-
             });
         }
 
-        function submitReply(event, level) {
+        // Post new reply to parent comment
+        function submitReply(parent) {
 
-            const recThreshold = 1;
-
-            let recNum = 0;
-            let selfRecd = false;
-
-            const selfLevel = level + 1;
-            console.log(selfLevel);
-
-            // Create comment and get textarea text
-            event.preventDefault();
-            let commentEl = document.createElement('div');
-            commentEl.className = 'comment';
-            // const text = document.getElementById('replyFormTest').value;
+            // // Create comment and get textarea text
+            let replyEl = document.createElement('div');
+            replyEl.className = 'comment';
             const text = document.getElementById('replyText').value;
-            commentEl.innerHTML = text;
+            replyEl.innerHTML = text;
 
             // Render footer (Username + "posted on Month Day, Year at XX:XX PM")
             const footer = document.createElement('div');
             footer.className = 'footer';
             footer.textContent = 'Username';
-            commentEl.appendChild(footer);
+            replyEl.appendChild(footer);
 
-            // Render comment reply button
-            const buttonReply = document.createElement("button");
-            buttonReply.className = 'button-reply';
-            buttonReply.textContent = "Reply";
-            footer.appendChild(buttonReply);
-
-            // Set reply button functionality
-            setupReplyListener(buttonReply, selfLevel);
-
-            // Render comment rec button
-            const buttonRec = document.createElement("button");
-            buttonRec.className = 'button-reply';
-            buttonRec.textContent = "Rec" + " (" + recNum + ")";
-            footer.appendChild(buttonRec);
-
-            // Set rec button functionality
-            buttonRec.addEventListener('click', () => {
-                if (!selfRecd) {
-                    selfRecd = true;
-                    recNum += 1;
-                    buttonRec.textContent = "Rec'd" + " (" + recNum + ")";
-
-                    // If recNum >= threshold, render comment green
-                    if (recNum >= recThreshold) {
-                        commentEl.style.backgroundColor = 'darkgreen';
-                    }
-                }
-                else {
-                    selfRecd = false;
-                    recNum -= 1;
-                    buttonRec.textContent = "Rec" + " (" + recNum + ")";
-
-                    // If recNum < threshold, render comment default color
-                    if (recNum < recThreshold) {
-                        commentEl.style.backgroundColor = '#383635';
-                    }
-                }
-
-            });
-
-            // Append comment
-            document.querySelector('#comments').appendChild(commentEl);
-
-            // Delete reply form 
-            let f = document.querySelector('#replyFormTest');
-            f.remove();
-        }
-
-        function submitComment(event) {
-
-            const recThreshold = 1;
-            const level = 0;
-
-            let recNum = 0;
-            let selfRecd = false;
-
-            event.preventDefault();
-
-            // Create comment and get textarea text
-            let commentEl = document.createElement('div');
-            commentEl.className = 'comment';
-            let text = document.getElementById('text').value;
-            text = text.replace(/\n/g, '<br>');
-            commentEl.innerHTML = text;
-
-            commentEl.setAttribute('testAttr', 0);
-            let testV = commentEl.getAttribute('testAttr');
-            console.log(testV);
-
-            // Render footer (Username + "posted on Month Day, Year at XX:XX PM")
-            const footer = document.createElement('div');
-            footer.className = 'footer';
-            footer.textContent = 'Username';
-            commentEl.appendChild(footer);
+            // Set comment ID and other reply attributes
+            commentNumber += 1;
+            replyEl.commentId = commentNumber;
+            replyEl.isReply = true;
+            replyEl.level = parent.level + 1;
+            replyEl.recNum = 0;
+            replyEl.selfRecd = false;
 
             // Render comment reply button
             const buttonReply = document.createElement("button");
@@ -245,64 +171,136 @@
 
             // Set reply button functionality
             buttonReply.addEventListener('click', () => {
-                
-                let replyDiv = document.createElement('div');
-                replyDiv.setAttribute('id', 'replyFormTest');
 
-                let replyForm = createForm(level);
+                let c = document.querySelector('#comments');
+                let replyForm = createForm(replyEl);
+                replyForm.id = 'replyFormEl';
 
-                document.querySelector('#comments').appendChild(replyDiv);
-                replyDiv.appendChild(replyForm);
-
+                if (replyEl.nextSibling) {
+                    c.insertBefore(replyForm, replyEl.nextSibling);
+                }
+                else {
+                    c.insertBefore(replyForm, document.getElementById('endDiv'));
+                }
             });
 
             // Render comment rec button
             const buttonRec = document.createElement("button");
             buttonRec.className = 'button-reply';
-            buttonRec.textContent = "Rec" + " (" + recNum + ")";
+            buttonRec.textContent = "Rec" + " (" + replyEl.recNum + ")";
             footer.appendChild(buttonRec);
 
             // Set rec button functionality
-            buttonRec.addEventListener('click', () => {
-                if (!selfRecd) {
-                    selfRecd = true;
-                    recNum += 1;
-                    buttonRec.textContent = "Rec'd" + " (" + recNum + ")";
+            setupRecListener(replyEl, buttonRec);
 
-                    // If recNum >= threshold, render comment green
-                    if (recNum >= recThreshold) {
-                        commentEl.style.backgroundColor = 'darkgreen';
-                    }
+            // Indent reply
+            let indent = 20 * replyEl.level;
+            replyEl.style.marginLeft = `${indent}px`;
+            
+            // Delete reply form 
+            let f = document.querySelector('#replyFormEl');
+            f.remove();
+            
+            // Append reply
+            let c = document.querySelector('#comments');
+            let node = parent;
+
+            // We want to append the reply below the parent comment it's replying to.
+            // But if there are already any replies to the parent on the same level as the new reply we're 
+            // appending, we want to place this new reply after these existing replies. Thus, if there are any
+            // comments/replies after the parent, loop through these subsequent comments until we find one whose
+            // level is less than the reply's level, and insert the new reply before the comment
+            // with the lesser level.
+            if (node.nextSibling) {
+                while (node.nextSibling.level >= replyEl.level) {
+                    node = node.nextSibling;
+                }
+                c.insertBefore(replyEl, node.nextSibling);
+            }
+            // There are no subsequent replies following the parent we're replying to, so insert the new reply
+            // before the endDiv element, which marks the "end" of the comment section.
+            else {
+                c.insertBefore(replyEl, document.getElementById('endDiv'));
+            }
+        }
+
+        // Post parent-level comment
+        function submitComment(event) {
+
+            event.preventDefault();
+
+            // Create comment and get textarea text
+            let commentEl = document.createElement('div');
+            commentEl.className = 'comment';
+            let text = document.getElementById('text').value;
+            text = text.replace(/\n/g, '<br>');                 
+            commentEl.innerHTML = text;
+
+            // Render footer (Username + "posted on Month Day, Year at XX:XX PM")
+            const footer = document.createElement('div');
+            footer.className = 'footer';
+            footer.textContent = 'Username';
+            commentEl.appendChild(footer);
+
+            // Set comment ID and other comment attributes
+            commentNumber += 1;
+            commentEl.commentId = commentNumber;
+            commentEl.isReply = false;
+            commentEl.level = 0;
+            commentEl.recNum = 0;
+            commentEl.selfRecd = false;
+            commentEl.level = 0;
+
+            // Render comment reply button
+            const buttonReply = document.createElement("button");
+            buttonReply.className = 'button-reply';
+            buttonReply.textContent = "Reply";
+            footer.appendChild(buttonReply);
+
+            // Set reply button functionality
+            buttonReply.addEventListener('click', () => {
+
+                let c = document.querySelector('#comments');
+                let replyForm = createForm(commentEl);
+                replyForm.id = 'replyFormEl';
+
+                if (commentEl.nextSibling) {
+                    c.insertBefore(replyForm, commentEl.nextSibling);
                 }
                 else {
-                    selfRecd = false;
-                    recNum -= 1;
-                    buttonRec.textContent = "Rec" + " (" + recNum + ")";
-
-                    // If recNum < threshold, render comment default color
-                    if (recNum < recThreshold) {
-                        commentEl.style.backgroundColor = '#383635';
-                    }
+                    c.insertBefore(replyForm, document.getElementById('endDiv'));
                 }
-
             });
 
-            // Append comment
-            document.querySelector('#comments').appendChild(commentEl);
+            // Render comment rec button
+            const buttonRec = document.createElement("button");
+            buttonRec.className = 'button-reply';
+            buttonRec.textContent = "Rec" + " (" + commentEl.recNum + ")";
+            footer.appendChild(buttonRec);
+
+            // Set rec button functionality
+            setupRecListener(commentEl, buttonRec);
+
+            // Append comment - it's a parent level comment, so we can append to the very end
+            // of the comment section. This is done by inserting the new comment before endDiv,
+            // which signifies the "end" of the comment section.
+            let c = document.querySelector('#comments');
+            c.insertBefore(commentEl, document.getElementById('endDiv'));
 
             // Clear textarea
             document.getElementById('text').value = '';
+
+            // "Center" comment section on new comment by vertically scrolling to the new comment
+            commentEl.scrollIntoView();
         }
 
-        function createForm(level) {
-
-            let selfLevel = level;
+        // Create reply form for submitting reply
+        function createForm(parent) {
 
             // Important - createElement('form') will break submit button and submitComment() won't work.
             let form = document.createElement('div');
 
-            // This won't take selfLevel being passed in
-            form.innerHTML = `<form onsubmit="submitReply(event, 0)">
+            form.innerHTML = `<form>
               <div class="reply-frame">
                 <textarea id="replyText" name="replyText" rows="4"></textarea><br>
                 <div class="button-container">
@@ -310,16 +308,24 @@
                         <button type="button" onclick="document.execCommand('bold',false,null)">B</button>
                         <button type="button" onclick="document.execCommand('italic',false,null)">I</button>
                     </div>
-                    <input type="submit" value="Submit">
+                    <input id="submitBtn" type="submit" value="Submit">
                 </div>
               </div>
             </form>`;
+
+            let submitBtn = form.querySelector('#submitBtn');
+            submitBtn.addEventListener('click', function(event) {
+              event.preventDefault();
+              submitReply(parent);
+            });
+
             return form;
         }
 
     </script>
 
     <!-- Comment submission form -->
+    <!-- spellcheck=true attribute turns on spellcheck in textarea -->
     <form onsubmit="submitComment(event)">
       <div class="frame">
         <textarea id="text" 
@@ -339,21 +345,20 @@
       </div>
     </form>
 
-
     <!-- Comment section -->
     <div id="comments"></div>
 
     <script>
-        // Automatically display a test comment
-        const commentEl = document.createElement('div');
-        commentEl.className = 'comment';
-        commentEl.textContent = 'This is a test comment. This is a second line of the comment.';
-        document.querySelector('#comments').appendChild(commentEl);
 
-        const footer = document.createElement('div');
-        footer.className = 'footer';
-        footer.textContent = 'Username';
-        commentEl.appendChild(footer);
+        // Very first element appended to #comments section is a div that marks the end of the comments.
+        // We can use this to call insertBefore() and insert new comments before this div, if there isn't
+        // already a comment after the one we're replying to.
+        const endDiv = document.createElement('div');
+        endDiv.id = 'endDiv';
+        document.body.appendChild(endDiv);
+        let c = document.querySelector('#comments');
+        c.appendChild(endDiv);
+
     </script>
     
 </body>
