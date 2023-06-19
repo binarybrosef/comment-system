@@ -216,6 +216,7 @@
           // Set comment attributes
           comment.element = commentEl;      // allows access to comment's HTML div element via element attr
           comment.selfRecd = false;
+          comment.element.setAttribute('elLevel', String(comment.level));
 
           // Render comment rec button
           const buttonRec = document.createElement("button");
@@ -238,22 +239,36 @@
           let indent = 20 * comment.level;
           commentEl.style.marginLeft = `${indent}px`;
 
+          let c = document.querySelector('#comments');
+          
           // If comment.parent exists (more precisely, if it's not undefined), comment is a reply to a parent comment
           if (comment.parent) {
-            let c = document.querySelector('#comments');
+            let node = document.getElementById('replyFormEl');
+            
+            // We want to place the new reply below the parent, but also after any existing replies to the parent
+            // that are at the same level as the new reply. Thus, iterate through the div comment elements appended to
+            // the #comments section until we either find a comment whose level is less than the new reply, or we 
+            // reach the end of the existing comments. 
+            if (node.nextSibling) {
 
-            if (comment.parent.element.nextSibling) {
-                c.insertBefore(commentEl, comment.parent.element.nextSibling);
+                // node and its nextSiblings are div elements. For convenience we assign comment levels to the div elements,
+                // but this can only be done via setAttr, which only supports strings. Thus, convert to int to compare to
+                // the new reply's level, which is contained in comment.level, where comment is a comment object, not div element.
+                while (parseInt(node.nextSibling.getAttribute('elLevel')) >= comment.level) {
+                    node = node.nextSibling;
+                }
+                c.insertBefore(commentEl, node.nextSibling);
             }
+            // There are no subsequent replies following the parent we're replying to, so insert the new reply
+            // before the endDiv element, which marks the "end" of #comments section.
             else {
                 c.insertBefore(commentEl, document.getElementById('endDiv'));
             }
           }
+          // Comment is not a reply but a parent-level comment; thus append to end of #comments section
           else {
-            let c = document.querySelector('#comments');
             c.insertBefore(commentEl, document.getElementById('endDiv'));
           }
-
         }
     </script>
 
@@ -278,20 +293,26 @@
     </form>
 
 
-    <!-- Comment section -->
+    <!-- Comments section -->
     <div id="comments"></div>
 
     <script>
+
+        // Set comment submission form submit button functionality
         let submitBtn = document.querySelector('#commentFormSubmit');
         submitBtn.addEventListener('click', function(event) {
             event.preventDefault();
 
+            // Build comment from comment submission form text area and add to #comments section 
+            // by calling addComment()
             let commentText = document.getElementById('commentFormTextArea').value;
             let comment = { text: commentText, username: 'King A', recs: 0, level: 0 };
 
             addComment(comment);
         });
 
+        // Create div element marking "end" of #comments section, allowing use of insertBefore()
+        // to add new parent-level comments to #comments section
         const endDiv = document.createElement('div');
         endDiv.id = 'endDiv';
         document.body.appendChild(endDiv);
@@ -299,12 +320,12 @@
         c.appendChild(endDiv);
     </script>
 
-    <!-- Embed the comments data structure as a JSON string -->
+    <!-- Existing comments for the given thread are embedded as a JSON string via EJS -->
     <script id="comments-data" type="application/json">
       <%- JSON.stringify(comments) %>
     </script>
 
-    <!-- On client side, add each comment to #comments section -->
+    <!-- On client side, parse JSON string and add each comment to #comments section -->
     <script>
         let commentSet = document.getElementById('comments-data').textContent;
         let arr = JSON.parse(commentSet);
