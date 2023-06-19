@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+
+    body {
+        background-color: #383635;
+    }
+
+    textarea {
+        width: 100%;
+        border: none;
+        resize: none;
+        background-color: #5a5754;
+        color: white;
+    }
+    form {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .frame {
+        width: 800px;
+/*        background-color: #f0f0f0;*/
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 10px;
+        background-color: #383635;
+    }
+    .reply-frame {
+        width: 767px;
+/*        background-color: #f0f0f0;*/
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 0px;
+        background-color: #383635;
+        text-align: left;
+        color: white;
+    }
+    #comments {
+        width: 800px;
+        height: 650px;
+        overflow-y: scroll;
+/*        border: 1px solid lightgray;*/
+        padding: 10px;
+        background-color: #ffffcc;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        margin: 0 auto;         /* horizontally center comment feed */
+        background-color: #5a5754;
+    }
+    .comment {
+        padding: 10px;
+        border-bottom: 1px solid #5a5754;
+        font: 15px Arial, sans-serif;
+        color: white;
+        animation-name: fadeIn;
+        animation-duration: 1s;
+        background-color: #383635;
+/*        margin-bottom: 4px;*/     /* separation between comments */
+/*        margin-left: 20px;*/      /* can be used to indent comments for replies */
+    }
+    .button-container {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+    input[type="submit"] {
+        background-color: black;
+/*        background-color: transparent;*/
+        color: white;
+        text-transform: uppercase;
+        border-radius: 0;
+        border: none;
+        padding: 6px 14px;
+        font-weight: bold;
+        font-size: 15px;
+        font-family: "Helvetica", sans-serif;
+        float: right;
+    }
+    .footer {
+        color: red;
+        font-size: 12px;
+        margin-top: 6px;
+        font-weight: bold;
+    }
+    .button-reply {
+        float: right;
+        background-color: transparent;
+        font: 13px Calibri, sans-serif;
+        color: white;
+        border: 2px solid #5a5754;
+    }
+    </style>
+</head>
+
+<body>
+
+    <script>
+
+        // Global vars/consts
+        const recThreshold = 5;
+        const commentRecdColor = 'darkgreen';
+        const commentDefaultColor = '#383635'; 
+
+        // Create reply form for submitting reply
+        function createReplyForm(parent) {
+
+            // Important - createElement('form') will break submit button and submitComment() won't work.
+            let form = document.createElement('div');
+
+            form.innerHTML = `<form>
+              <div class="reply-frame">
+                <textarea id="replyText" name="replyText" rows="4"></textarea><br>
+                <div class="button-container">
+                    <div>
+                        <button type="button" onclick="document.execCommand('bold',false,null)">B</button>
+                        <button type="button" onclick="document.execCommand('italic',false,null)">I</button>
+                    </div>
+                    <input id="replyFormSubmit" type="submit" value="Submit">
+                </div>
+              </div>
+            </form>`;
+
+            let submitBtn = form.querySelector('#replyFormSubmit');
+            submitBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+
+                let replyText = document.getElementById('replyText').value;
+                let replyLevel = parent.level + 1;
+
+                // Create new comment as reply - text is reply form's textarea content, username is logged in user, 0 recs,
+                // level = parent's level + 1
+                let reply = { text: replyText, username: 'King A', recs: 0, level: replyLevel };
+
+                // pass reply into addComment, but modify addComment to properly locate reply
+                reply.parent = parent;
+                addComment(reply);
+
+                // After reply is submitted, delete reply form
+                form.remove();
+            });
+
+            return form;
+        }
+
+        // Set reply button functionality
+        function setupReplyListener(comment) {
+            comment.btnReply.addEventListener('click', () => {
+
+                let c = document.querySelector('#comments');
+                let replyForm = createReplyForm(comment);
+                replyForm.id = 'replyFormEl';
+
+                // Important! comment is the data structure with various attributes that "logically"
+                // represents a comment. comment.element is the HTML div element for a comment, and it's what
+                // is appended - not the comment data structure - to the #comments section. So when checking if
+                // an existing comment has a subsequent comment for placing replies and reply forms, we need to
+                // do so in terms of div elements.
+                if (comment.element.nextSibling) {
+                    c.insertBefore(replyForm, comment.element.nextSibling);
+                }
+                else {
+                    c.insertBefore(replyForm, document.getElementById('endDiv'));
+                }
+            });
+        }
+
+        // Set rec button functionality
+        function setupRecListener(comment, button) {
+            button.addEventListener('click', () => {
+
+                // If user hasn't recd comment, set selfRecd=true and increment recNum
+                if (!comment.selfRecd) {
+                    comment.selfRecd = true;
+                    comment.recs += 1;
+                    
+                    button.textContent = "Rec'd" + " (" + (comment.recs) + ")";
+
+                    // If recNum >= threshold, render comment green
+                    if (comment.recs >= recThreshold) {
+                        comment.element.style.backgroundColor = commentRecdColor;
+                    }
+                }
+                else {
+                    comment.selfRecd = false;
+                    comment.recs -= 1;
+                    
+                    button.textContent = "Rec" + " (" + (comment.recs) + ")";
+
+                    // If recs < threshold, render comment default color
+                    if (comment.recs < recThreshold) {
+                        comment.element.style.backgroundColor = commentDefaultColor;
+                    }
+                }
+            });
+        }
+
+        function addComment(comment) {
+
+          // Create comment and get textarea text
+          let commentEl = document.createElement('div');
+          commentEl.className = 'comment';
+          commentEl.innerHTML = comment.text;
+
+          // Render footer (Username + "posted on Month Day, Year at XX:XX PM")
+          const footer = document.createElement('div');
+          footer.className = 'footer';
+          footer.textContent = comment.username;
+          commentEl.appendChild(footer);
+
+          // Set comment attributes
+          comment.element = commentEl;      // allows access to comment's HTML div element via element attr
+          comment.selfRecd = false;
+
+          // Render comment rec button
+          const buttonRec = document.createElement("button");
+          buttonRec.className = 'button-reply';
+          buttonRec.textContent = "Rec" + " (" + comment.recs + ")";
+          footer.appendChild(buttonRec)
+
+          // Render comment reply button
+          const buttonReply = document.createElement("button");
+          buttonReply.className = 'button-reply';
+          buttonReply.textContent = "Reply";
+          footer.appendChild(buttonReply);
+          comment.btnReply = buttonReply;
+
+          // Set button functionality
+          setupRecListener(comment, buttonRec);
+          setupReplyListener(comment);
+
+          // Indent reply
+          let indent = 20 * comment.level;
+          commentEl.style.marginLeft = `${indent}px`;
+
+          // If comment.parent exists (more precisely, if it's not undefined), comment is a reply to a parent comment
+          if (comment.parent) {
+            let c = document.querySelector('#comments');
+
+            if (comment.parent.element.nextSibling) {
+                c.insertBefore(commentEl, comment.parent.element.nextSibling);
+            }
+            else {
+                c.insertBefore(commentEl, document.getElementById('endDiv'));
+            }
+          }
+          else {
+            let c = document.querySelector('#comments');
+            c.insertBefore(commentEl, document.getElementById('endDiv'));
+          }
+
+        }
+    </script>
+
+    <!-- Comment submission form -->
+    <!-- spellcheck=true attribute turns on spellcheck in textarea -->
+    <form>
+      <div class="frame">
+        <textarea id="commentFormTextArea" 
+            name="text" 
+            spellcheck=true                 
+            placeholder="Comment here." 
+            rows="4"></textarea><br>
+        <div class="button-container">
+            <div>
+                <!-- Formatting buttons; currently non-functional -->
+                <button type="button" onclick="document.execCommand('bold',false,null)">B</button>
+                <button type="button" onclick="document.execCommand('italic',false,null)">I</button>
+            </div>
+            <input type="submit" value="Submit" id="commentFormSubmit">
+        </div>
+      </div>
+    </form>
+
+
+    <!-- Comment section -->
+    <div id="comments"></div>
+
+    <script>
+        let submitBtn = document.querySelector('#commentFormSubmit');
+        submitBtn.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            let commentText = document.getElementById('commentFormTextArea').value;
+            let comment = { text: commentText, username: 'King A', recs: 0, level: 0 };
+
+            addComment(comment);
+        });
+
+        const endDiv = document.createElement('div');
+        endDiv.id = 'endDiv';
+        document.body.appendChild(endDiv);
+        let c = document.querySelector('#comments');
+        c.appendChild(endDiv);
+    </script>
+
+    <!-- Embed the comments data structure as a JSON string -->
+    <script id="comments-data" type="application/json">
+      <%- JSON.stringify(comments) %>
+    </script>
+
+    <!-- On client side, add each comment to #comments section -->
+    <script>
+        let commentSet = document.getElementById('comments-data').textContent;
+        let arr = JSON.parse(commentSet);
+
+        arr.forEach(comment => {
+            addComment(comment);
+        });
+    </script>
+</body>
+</html>
